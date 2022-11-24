@@ -24,6 +24,9 @@ const box = blessed.box({
   },
 })
 
+screen.key('q',() => {
+  process.exit()
+})
 const box_video =  blessed.list({
   left: 'center',
   width: '90%',
@@ -37,6 +40,7 @@ const box_video =  blessed.list({
   content: '{bold}VIDEO{/bold}!',
   tags: true,
 })
+
 box_video.on('select',(e) => {
   play(Global.videos[parseInt(e.content.split('.')[0])-1])
   box_info.setContent(template(e.content,'loading','--:--  ',0,'-'))
@@ -59,6 +63,7 @@ media.on('play',() => {
   box_info.setContent(templateSet('status','playing'))
   screen.render()
 })
+
 const box_seacrh = blessed.textbox({
   left: 'center',
   vi: true,
