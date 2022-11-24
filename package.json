@@ -1,0 +1,19 @@
+{
+  "name": "yt-radio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/blessed": "^0.1.19",
+    "blessed": "^0.1.81",
+    "scrape-youtube": "^2.3.2",
+    "ytdl-core": "^4.11.2"
+  }
+}
