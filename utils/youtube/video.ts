@@ -12,6 +12,13 @@ export async function downloadBuffer(file: video){
 	.pipe(fs.createWriteStream(bufferFileName))
 }
 
+export async function getAudioStream(file: video): Promise<string>{
+	let buffer = await ytdl.getInfo(file.id);
+	media.emit('info',buffer)
+	let audioFormat = ytdl.chooseFormat(buffer.formats, { quality: 'highestaudio', filter: 'audioonly' });
+	return audioFormat.url;
+}
+
 export async function downloadToDisk(file: video): Promise<string> {
 	return new Promise((resolve,reject) => {
 		let filename = `${file.title}.mp3`

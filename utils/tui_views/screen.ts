@@ -3,9 +3,10 @@ import {home} from '../youtube/home.js'
 import {reload} from '../tool/reload.js'
 import {Global} from '../tool/global.js'
 import {convert} from '../tool/convert.js'
-import {play,media} from '../tool/play.js'
+import {play,media,stop} from '../tool/play.js'
 import {find} from '../tool/find.js'
 import {template,templateSet} from '../tool/template.js'
+import {wait} from "../tool/time.js"
 
 const screen = blessed.screen({
   smartCSR: true,
@@ -24,9 +25,11 @@ const box = blessed.box({
   },
 })
 
-screen.key('q',() => {
+screen.key('q', async () => {
+  await stop()
   process.exit()
 })
+
 const box_video =  blessed.list({
   left: 'center',
   width: '90%',
@@ -41,8 +44,10 @@ const box_video =  blessed.list({
   tags: true,
 })
 
-box_video.on('select',(e) => {
-  play(Global.videos[parseInt(e.content.split('.')[0])-1])
+box_video.on('select', async (e) => {
+  Global.index = parseInt(e.content.split('.')[0])-1
+  if(Global.PID) await stop()
+  play(Global.videos[Global.index])
   box_info.setContent(template(e.content,'loading','--:--  ',0,'-'))
   screen.render()
 })
@@ -62,6 +67,17 @@ media.on('info',(data) => {
 media.on('play',() => {
   box_info.setContent(templateSet('status','playing'))
   screen.render()
+})
+
+media.on('done', () => {
+  box_info.setContent(templateSet('status','done'))
+  wait(1)
+  Global.index++ 
+  play(Global.videos[Global.index])
+})
+
+media.on('stop', () => {
+  box_info.setContent(templateSet('status','done'))
 })
 
 const box_seacrh = blessed.textbox({
