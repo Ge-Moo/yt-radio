@@ -24,12 +24,16 @@ export async function play(vid: video){
 
 	// play audio 
 	media.emit('play')
+	let hasEmit = false 
 	global.PID = exec(`ffplay ${option.join(' ')}`,(err,stdout,stderr) => {
 		if(err){
 			media.emit('stop')
 			return
 		}
-		media.emit('done')
+		if(!hasEmit){
+			media.emit('done')
+			hasEmit = true 
+		}
 	})
 
 }

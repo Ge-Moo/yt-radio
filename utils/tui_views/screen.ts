@@ -71,14 +71,13 @@ media.on('play',() => {
 
 media.on('done', () => {
   box_info.setContent(templateSet('status','done'))
+  screen.render()
   wait(1)
   Global.index++ 
   play(Global.videos[Global.index])
 })
 
-media.on('stop', () => {
-  box_info.setContent(templateSet('status','done'))
-})
+media.on('stop', () => 'done'/* pass */ )
 
 const box_seacrh = blessed.textbox({
   left: 'center',
