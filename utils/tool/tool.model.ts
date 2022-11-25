@@ -4,6 +4,7 @@ export interface global {
   videos: video[],
   PID: ChildProcess,
   view: string[],
-  index: number
+  index: number,
+  session: boolean,
 }
 

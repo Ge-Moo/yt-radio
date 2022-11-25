@@ -3,13 +3,20 @@ import fs from "fs"
 import { resolve } from "path" 
 import { video } from "./youtube.model.js"
 import { media } from "../tool/play.js"
+
 export async function downloadBuffer(file: video){
-	let bufferFileName: string = ".buffer.mp3"
+	if(!file.title){
+		return media.emit('finish')
+	}
+	let bufferFileName: string = `${file.title}.mp3`
+	let path = process.env.HOME
 	let videoInfo = await ytdl.getInfo(file.id)
 	media.emit('info',videoInfo)
   // setup ytdl before write in to disk 
 	ytdl(file.id,{filter : format => format.quality == 'tiny' && format.hasAudio == true})
-	.pipe(fs.createWriteStream(bufferFileName))
+	.pipe(fs.createWriteStream(`${path}/Downloads/${bufferFileName}`).on('finish',() => {
+		media.emit('finish')
+	}))
 }
 
 export async function getAudioStream(file: video): Promise<string>{

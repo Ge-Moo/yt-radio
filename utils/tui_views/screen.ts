@@ -4,10 +4,12 @@ import {reload} from '../tool/reload.js'
 import {Global} from '../tool/global.js'
 import {convert} from '../tool/convert.js'
 import {play,media,stop} from '../tool/play.js'
+import {downloadBuffer} from "../youtube/video.js"
 import {find} from '../tool/find.js'
 import {template,templateSet} from '../tool/template.js'
 import {wait} from "../tool/time.js"
 
+let download = false
 const screen = blessed.screen({
   smartCSR: true,
   dockBorders: true
@@ -18,7 +20,7 @@ const box = blessed.box({
   mouse: true,
   left: 'center',
   width: '95%',
-  height: '72%',
+  height: '71%',
   tags: true,
   border: {
     type: 'line'
@@ -45,8 +47,11 @@ const box_video =  blessed.list({
 })
 
 box_video.on('select', async (e) => {
+  if(download){
+    return 
+  }
   Global.index = parseInt(e.content.split('.')[0])-1
-  if(Global.PID) await stop()
+  if(Global.session) await stop()
   play(Global.videos[Global.index])
   box_info.setContent(template(e.content,'loading','--:--  ',0,'-'))
   screen.render()
@@ -69,15 +74,21 @@ media.on('play',() => {
   screen.render()
 })
 
-media.on('done', () => {
+media.on('done', async() => {
   box_info.setContent(templateSet('status','done'))
   screen.render()
-  wait(1)
+  await wait(1)
   Global.index++ 
   play(Global.videos[Global.index])
 })
 
 media.on('stop', () => 'done'/* pass */ )
+
+media.on('finish',() => {
+  download = false
+  box_info.setContent(templateSet('status','downloaded'))
+  screen.render()
+})
 
 const box_seacrh = blessed.textbox({
   left: 'center',
@@ -108,16 +119,54 @@ box_seacrh.on('submit',async (e) => {
 })
 
 const box_info = blessed.box({
-  content : "No Song Selected ",
+  content : template("No Song Selected ","sleep",'--:-- ',0,'-'),
   align: 'left',
-  valign: 'top',
-  left: 'center',
+  valign: 'bottom',
+  left: '0',
   bottom: '0',
+  width: '65%',
+  height: '100%',
+})
+
+const button_box = blessed.button({
+  content: 'Download',
+  mouse : true,
+  align : 'center',
+  valign : 'middle',
+  width : '20%',
+  left: '70%',
+  height : '50%',
+  border : {
+    type: 'line',
+  },
+  style : {
+    fg : 'black',
+    bg : 'green',
+    hover : {
+      bg : 'blue',
+    }
+  }
+})
+
+const bottom_box = blessed.box({
+  left: 'center',
+  bottom:'0',
+  height: '28%',
   width: '95%',
-  height: '25%',
-  border: {
+  border : {
     type: 'line'
   }
+})
+
+bottom_box.append(button_box)
+bottom_box.append(box_info)
+
+button_box.on('press', async () => {
+  download = true 
+  await stop()
+  downloadBuffer(Global.videos[Global.index])
+  box_info.setContent(templateSet('status','download'))
+  screen.render()
 })
 
 async function main(){
@@ -129,7 +178,7 @@ async function main(){
   });
   screen.title = 'My Youtube Radio'
   screen.append(box_seacrh)
-  screen.append(box_info)
+  screen.append(bottom_box)
   box.append(box_video)
   screen.append(box)
   screen.render()

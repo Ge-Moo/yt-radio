@@ -1,5 +1,6 @@
 import {video} from "../youtube/youtube.model.js"
 import {Global as global} from "./global.js"
+import {wait} from "../tool/time.js"
 import {downloadBuffer,getAudioStream} from "../youtube/video.js"
 import {exec} from "child_process"
 import {EventEmitter} from 'events'
@@ -35,6 +36,7 @@ export async function play(vid: video){
 			hasEmit = true 
 		}
 	})
+	await wait(0.5)
 
 }
 
