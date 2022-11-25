@@ -23,7 +23,7 @@ export function template(
   OLD.views = views
   OLD.owner = owner 
 
-return `  title   : ${title.slice(0,30)}
+return `  title   : ${title.length >= 40 ? `${title.slice(0,40)}...` : title }
   status  : ${status}   owner : ${owner}
   length  : ${length}   views : ${views}
 `

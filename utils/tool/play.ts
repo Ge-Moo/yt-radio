@@ -17,7 +17,10 @@ export async function stop(){
 export async function play(vid: video){
 
 	// kill last media
-	await stop()
+	if(global.PID){
+		global.PID = undefined
+		await stop()
+	}
 
 	// get url stream from video for audio only
 	let urlStream = await getAudioStream(vid)
@@ -35,7 +38,7 @@ export async function play(vid: video){
 			media.emit('done')
 			hasEmit = true 
 		}
-	})
+	}).pid
 	await wait(0.5)
 
 }

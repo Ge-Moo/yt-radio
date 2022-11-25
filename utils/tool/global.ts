@@ -5,6 +5,7 @@ export const Global: global = {
   videos: [],
   view: [''],
   index: 0,
-  PID: spawn('pwd'),
-  session: false,
+  PID: undefined,
+  session_d: false,
+  session_p: false,
 }

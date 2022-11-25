@@ -8,8 +8,8 @@ import {downloadBuffer} from "../youtube/video.js"
 import {find} from '../tool/find.js'
 import {template,templateSet} from '../tool/template.js'
 import {wait} from "../tool/time.js"
+import {playCon,stopCon} from '../tool/control.js'
 
-let download = false
 const screen = blessed.screen({
   smartCSR: true,
   dockBorders: true
@@ -20,7 +20,7 @@ const box = blessed.box({
   mouse: true,
   left: 'center',
   width: '95%',
-  height: '71%',
+  height: '60%',
   tags: true,
   border: {
     type: 'line'
@@ -31,7 +31,8 @@ screen.key('q', async () => {
   await stop()
   process.exit()
 })
-
+screen.key('s',async() => await playCon())
+screen.key('p',async() => await stopCon())
 const box_video =  blessed.list({
   left: 'center',
   width: '90%',
@@ -47,14 +48,20 @@ const box_video =  blessed.list({
 })
 
 box_video.on('select', async (e) => {
-  if(download){
+  if(Global.session_d){
     return 
+  } else {
+    if(Global.session_p){
+      await stop()
+      return 
+    }
+    Global.session_p = true
+    Global.index = parseInt(e.content.split('.')[0])-1
+    // if(Global.session_p) await stop()
+    play(Global.videos[Global.index])
+    box_info.setContent(template(e.content,'loading','--:--  ',0,'-'))
+    screen.render()
   }
-  Global.index = parseInt(e.content.split('.')[0])-1
-  if(Global.session) await stop()
-  play(Global.videos[Global.index])
-  box_info.setContent(template(e.content,'loading','--:--  ',0,'-'))
-  screen.render()
 })
 
 media.on('info',(data) => {
@@ -70,6 +77,7 @@ media.on('info',(data) => {
 })
 
 media.on('play',() => {
+  Global.session_p = false
   box_info.setContent(templateSet('status','playing'))
   screen.render()
 })
@@ -79,13 +87,13 @@ media.on('done', async() => {
   screen.render()
   await wait(1)
   Global.index++ 
-  play(Global.videos[Global.index])
+  await play(Global.videos[Global.index])
 })
 
 media.on('stop', () => 'done'/* pass */ )
 
 media.on('finish',() => {
-  download = false
+  Global.session_d = false
   box_info.setContent(templateSet('status','downloaded'))
   screen.render()
 })
@@ -121,53 +129,116 @@ box_seacrh.on('submit',async (e) => {
 const box_info = blessed.box({
   content : template("No Song Selected ","sleep",'--:-- ',0,'-'),
   align: 'left',
-  valign: 'bottom',
-  left: '0',
+  left: 'center',
   bottom: '0',
-  width: '65%',
-  height: '100%',
+  width: '95%',
+  height: '40%',
 })
 
-const button_box = blessed.button({
-  content: 'Download',
+const buttons_box = blessed.box({
+  top: '0%',
+  left: 'center',
+  width : '95%',
+  height : '60%',
+})
+
+const button_exit = blessed.button({
+  content: 'exit',
+  padding : 0,
   mouse : true,
-  align : 'center',
-  valign : 'middle',
+  left: '36%',
   width : '20%',
-  left: '70%',
-  height : '50%',
+  align: 'center',
+  height : '60%',
   border : {
     type: 'line',
   },
-  style : {
-    fg : 'black',
-    bg : 'green',
-    hover : {
-      bg : 'blue',
-    }
+})
+button_exit.on('press',async () => {
+  await stop()
+  process.exit() 
+})
+
+const button_play = blessed.button({
+  content: 'Play',
+  padding : 0,
+  mouse : true,
+  top: '0%',
+  width : '20%',
+  align: 'center',
+  height : '60%',
+  border : {
+    type: 'line',
+  },
+})
+button_play.on('press',async() =>{ 
+  box_info.setContent(templateSet('status','playing'))
+  screen.render()
+  await stopCon()
+})
+
+const button_pause = blessed.button({
+  content: 'Pause',
+  padding : 0,
+  mouse : true,
+  left: '18%',
+  width : '20%',
+  align: 'center',
+  height : '60%',
+  border : {
+    type: 'line',
+  },
+})
+button_pause.on('press',async() => { 
+  box_info.setContent(templateSet('status','pause'))
+  screen.render()
+  await playCon()
+})
+
+const button_download = blessed.button({
+  content: 'Download',
+  padding : 0,
+  mouse : true,
+  top: '0%',
+  left: '54%',
+  width : '20%',
+  align: 'center',
+  height : '60%',
+  border : {
+    type: 'line',
+  },
+})
+
+button_download.setFront()
+button_download.on('press', async () => {
+  if(Global.session_p == true || Global.session_d == true){
+    return  
+  }else { 
+    Global.session_d = true 
+    await stop()
+    downloadBuffer(Global.videos[Global.index])
+    box_info.setContent(template('analyzing...','download','--:--',0,'-'))
+    screen.render()
   }
 })
 
 const bottom_box = blessed.box({
   left: 'center',
   bottom:'0',
-  height: '28%',
+  height: '40%',
   width: '95%',
   border : {
     type: 'line'
   }
 })
 
-bottom_box.append(button_box)
+buttons_box.append(button_download)
+buttons_box.append(button_pause)
+buttons_box.append(button_play)
+buttons_box.append(button_exit)
+bottom_box.append(buttons_box)
 bottom_box.append(box_info)
 
-button_box.on('press', async () => {
-  download = true 
-  await stop()
-  downloadBuffer(Global.videos[Global.index])
-  box_info.setContent(templateSet('status','download'))
-  screen.render()
-})
 
 async function main(){
   let rawHomeContent = await home()
