@@ -33,10 +33,19 @@ screen.key('q', async () => {
 })
 screen.key('s',async() => await playCon())
 screen.key('p',async() => await stopCon())
+screen.key('e',() => {
+  box_seacrh.focus()
+})
+screen.key('m',() => {
+  box_video.focus()
+})
+
 const box_video =  blessed.list({
   left: 'center',
   width: '90%',
   height: '90%',
+  vi: true,
+  keys: true,
   mouse: true,
   style: {
     selected : {
@@ -46,7 +55,9 @@ const box_video =  blessed.list({
   content: '{bold}VIDEO{/bold}!',
   tags: true,
 })
-
+box_video.key('l',() => {
+  box_video.up(1)
+})
 box_video.on('select', async (e) => {
   if(Global.session_d){
     return 
